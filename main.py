@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from googletrans import LANGUAGES, Translator
 from gtts import gTTS
-
+from gtts.lang import tts_langs
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -34,12 +34,25 @@ async def translate_api(request: Request):
     target_language = data["target_language"]
 
     translation = translator.translate(text, src=source_language, dest=target_language)
-    return JSONResponse(content={"text": translation.text, "origin": translation.origin, "src": translation.src, "dest": translation.dest})
+    return JSONResponse(
+        content={
+            "text": translation.text,
+            "origin": translation.origin,
+            "src": translation.src,
+            "dest": translation.dest,
+        }
+    )
+
+
+@app.get("/spoken-languages")
+async def spoken_languages():
+    return {"languages": tts_langs()}
 
 
 @app.get("/speak")
 async def speak(text: str, lang: str):
     tts = gTTS(text, lang=lang)
+
     mp3_file = io.BytesIO()
     tts.write_to_fp(mp3_file)
     mp3_file.seek(0)

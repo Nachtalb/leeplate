@@ -61,6 +61,48 @@ function debounce(fn, delay) {
   };
 }
 
+const spokenLanguagesCacheKey = "spokenLanguages";
+const spokenLanguagesCacheExpiry = 7 * 24 * 60 * 60 * 1000; // 1 week
+
+// Function to fetch the list of available languages from the backend
+async function fetchSpokenLanguages() {
+  const response = await fetch("/spoken-languages");
+  const data = await response.json();
+  return data.languages;
+}
+
+// Function to get the list of available languages, fetching it if necessary
+function getSpokenLanguages() {
+  return new Promise((resolve, reject) => {
+    // Check if the spoken languages are already cached in localStorage
+    const cachedLanguages = JSON.parse(localStorage.getItem(spokenLanguagesCacheKey));
+    if (cachedLanguages && Date.now() < cachedLanguages.expiry) {
+      // The spoken languages are cached and haven't expired yet, use them
+      resolve(cachedLanguages.languages);
+      return;
+    }
+
+    // The spoken languages aren't cached or have expired, fetch them from the backend
+    fetchSpokenLanguages().then((languages) => {
+      // Cache the spoken languages in localStorage
+      localStorage.setItem(spokenLanguagesCacheKey, JSON.stringify({
+        languages: languages,
+        expiry: Date.now() + spokenLanguagesCacheExpiry
+      }));
+
+      // Return the list of spoken languages
+      resolve(languages);
+    }).catch((error) => {
+      reject(error);
+    });
+  });
+}
+
+// Function to check if a language code is in the list of available languages
+async function canSpeakLanguage(languageCode) {
+  return languageCode in (await getSpokenLanguages());
+}
+
 inputAudioButton.addEventListener("click", async () => {
   if (!this.disabled) await playAudio(true)
 });
@@ -101,8 +143,8 @@ async function translationWorkflow() {
     sourceLanguageSelect.value = currentTranslationResult.src;
 
   outputTextArea.disabled = false;
-  inputAudioButton.disabled = false;
-  outputAudioButton.disabled = false;
+  inputAudioButton.disabled = !await canSpeakLanguage(currentTranslationResult["src"]);
+  outputAudioButton.disabled = !await canSpeakLanguage(currentTranslationResult["dest"]);
 }
 
 const translate = debounce(translationWorkflow, 500);
