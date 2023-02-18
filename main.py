@@ -5,7 +5,6 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from googletrans import LANGUAGES, Translator
-
 from gtts import gTTS
 
 
@@ -18,7 +17,7 @@ translator = Translator()
 @app.get("/", response_class=HTMLResponse)
 async def translate(request: Request):
     return templates.TemplateResponse(
-        "translate.j2", {"request": request, "languages": {code: name.title() for code, name in LANGUAGES.items()}}
+        "translate.j2", {"request": request, "languages": {code: name.title() for code, name in LANGUAGES.items()}, "default_lang": "en"}
     )
 
 
@@ -30,7 +29,7 @@ async def translate_api(request: Request):
     target_language = data["target_language"]
 
     translation = translator.translate(text, src=source_language, dest=target_language)
-    return JSONResponse(content={"translation": translation.text})
+    return JSONResponse(content={"text": translation.text, "origin": translation.origin, "src": translation.src, "dest": translation.dest})
 
 
 @app.get("/speak")
