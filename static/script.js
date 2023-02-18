@@ -33,7 +33,7 @@ async function translationWorkflow() {
   });
 
   if (current_translation === data) return;
-  current_translation = data;
+
 
   outputTextArea.disabled = true;
 
@@ -44,6 +44,8 @@ async function translationWorkflow() {
     },
     body: data,
   });
+
+  if (response.ok) current_translation = data;
 
   const result = await response.json();
   outputTextArea.value = result.text;
