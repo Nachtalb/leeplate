@@ -2,8 +2,48 @@ const form = document.querySelector("#translate-form");
 const inputTextArea = document.querySelector("#text");
 const outputTextArea = document.querySelector("#translation");
 const sourceLanguageSelect = document.querySelector("#source_language");
+const outputAudioButton = document.querySelector("#output-audio-button");
+const inputAudioButton = document.querySelector("#input-audio-button");
 
-let current_translation;
+let currentTranslationInput;
+let currentTranslationResult;
+let audioCache = {};
+
+function playCachedAudio(audioData) {
+  const audioContext = new AudioContext();
+  const audioSource = audioContext.createBufferSource();
+
+  // Create a new ArrayBuffer that is not detached
+  const audioBuffer = new ArrayBuffer(audioData.byteLength);
+  const audioView = new Uint8Array(audioBuffer);
+  audioView.set(new Uint8Array(audioData));
+
+  audioContext.decodeAudioData(audioBuffer, function(buffer) {
+    audioSource.buffer = buffer;
+    audioSource.connect(audioContext.destination);
+    audioSource.start(0);
+  });
+}
+
+async function playAudio(isSource) {
+  const text = currentTranslationResult[isSource ? "origin" : "text"]
+  const language = currentTranslationResult[isSource ? "src" : "dest"]
+  // Check if the audio data is already cached
+  if (audioCache[text]) {
+    playCachedAudio(audioCache[text]);
+    return;
+  }
+
+  // Make a request to the server to get the audio data
+  const response = await fetch(`/speak?lang=${language}&text=${encodeURIComponent(text)}`);
+  const audioData = await response.arrayBuffer();
+
+  // Cache the audio data
+  audioCache[text] = audioData;
+
+  // Play the audio data
+  playCachedAudio(audioData);
+}
 
 function debounce(fn, delay) {
   let timerId;
@@ -21,6 +61,14 @@ function debounce(fn, delay) {
   };
 }
 
+inputAudioButton.addEventListener("click", async () => {
+  if (!this.disabled) await playAudio(true)
+});
+
+outputAudioButton.addEventListener("click", async () => {
+  if (!this.disabled) await playAudio(false)
+});
+
 async function translationWorkflow() {
   const formData = new FormData(form);
   if (formData.get("text") === "") return;
@@ -32,7 +80,7 @@ async function translationWorkflow() {
     target_language: formData.get("target_language"),
   });
 
-  if (current_translation === data) return;
+  if (currentTranslationInput === data) return;
 
 
   outputTextArea.disabled = true;
@@ -45,45 +93,16 @@ async function translationWorkflow() {
     body: data,
   });
 
-  if (response.ok) current_translation = data;
+  if (response.ok) currentTranslationInput = data;
 
-  const result = await response.json();
-  outputTextArea.value = result.text;
+  currentTranslationResult = await response.json();
+  outputTextArea.value = currentTranslationResult.text;
   if (formData.get("source_language") == "auto")
-    sourceLanguageSelect.value = result.src;
+    sourceLanguageSelect.value = currentTranslationResult.src;
 
   outputTextArea.disabled = false;
-
-  // Create new "Listen" buttons
-  const inputAudioButton = document.querySelector("#input-audio-button");
   inputAudioButton.disabled = false;
-  inputAudioButton.removeEventListener("click", inputAudioButton.onclick);
-  inputAudioButton.addEventListener("click", async () => {
-    const lang = result.src;
-    const audioResponse = await fetch(
-      `/speak?text=${encodeURIComponent(result.origin)}&lang=${lang}`
-    );
-    const audioBlob = await audioResponse.blob();
-    const audioUrl = URL.createObjectURL(audioBlob);
-
-    const audio = new Audio(audioUrl);
-    audio.play();
-  });
-
-  const outputAudioButton = document.querySelector("#output-audio-button");
   outputAudioButton.disabled = false;
-  outputAudioButton.removeEventListener("click", outputAudioButton.onclick);
-  outputAudioButton.addEventListener("click", async () => {
-    const lang = result.dest;
-    const audioResponse = await fetch(
-      `/speak?text=${encodeURIComponent(result.text)}&lang=${lang}`
-    );
-    const audioBlob = await audioResponse.blob();
-    const audioUrl = URL.createObjectURL(audioBlob);
-
-    const audio = new Audio(audioUrl);
-    audio.play();
-  });
 }
 
 const translate = debounce(translationWorkflow, 500);
