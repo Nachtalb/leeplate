@@ -1,6 +1,7 @@
 const form = document.querySelector("#translate-form");
 const inputTextArea = document.querySelector("#text");
 const outputTextArea = document.querySelector("#translation");
+const sourceLanguageSelect = document.querySelector("#source_language");
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -22,6 +23,8 @@ form.addEventListener("submit", async (event) => {
 
   const result = await response.json();
   outputTextArea.value = result.text;
+  if (formData.get("source_language") == "auto")
+    sourceLanguageSelect.value = result.src;
 
   // Create new "Listen" buttons
   const inputAudioButton = document.querySelector("#input-audio-button");
