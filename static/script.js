@@ -26,11 +26,13 @@ async function translation_workflow() {
 
   // Create new "Listen" buttons
   const inputAudioButton = document.querySelector("#input-audio-button");
-  inputAudioButton.disabled = false
-  inputAudioButton.removeEventListener("click", inputAudioButton.onclick)
+  inputAudioButton.disabled = false;
+  inputAudioButton.removeEventListener("click", inputAudioButton.onclick);
   inputAudioButton.addEventListener("click", async () => {
     const lang = result.src;
-    const audioResponse = await fetch(`/speak?text=${encodeURIComponent(result.origin)}&lang=${lang}`);
+    const audioResponse = await fetch(
+      `/speak?text=${encodeURIComponent(result.origin)}&lang=${lang}`
+    );
     const audioBlob = await audioResponse.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
 
@@ -39,11 +41,13 @@ async function translation_workflow() {
   });
 
   const outputAudioButton = document.querySelector("#output-audio-button");
-  outputAudioButton.disabled = false
-  outputAudioButton.removeEventListener('click', outputAudioButton.onclick)
+  outputAudioButton.disabled = false;
+  outputAudioButton.removeEventListener("click", outputAudioButton.onclick);
   outputAudioButton.addEventListener("click", async () => {
     const lang = result.dest;
-    const audioResponse = await fetch(`/speak?text=${encodeURIComponent(result.text)}&lang=${lang}`);
+    const audioResponse = await fetch(
+      `/speak?text=${encodeURIComponent(result.text)}&lang=${lang}`
+    );
     const audioBlob = await audioResponse.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
 
