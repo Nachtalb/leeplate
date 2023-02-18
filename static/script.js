@@ -7,6 +7,8 @@ async function translation_workflow() {
   const formData = new FormData(form);
   if (formData.get("text") === "") return;
 
+  outputTextArea.disabled = true;
+
   const data = {
     text: formData.get("text"),
     source_language: formData.get("source_language"),
@@ -25,6 +27,8 @@ async function translation_workflow() {
   outputTextArea.value = result.text;
   if (formData.get("source_language") == "auto")
     sourceLanguageSelect.value = result.src;
+
+  outputTextArea.disabled = false;
 
   // Create new "Listen" buttons
   const inputAudioButton = document.querySelector("#input-audio-button");
