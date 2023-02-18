@@ -65,7 +65,7 @@ form.addEventListener("keydown", async (event) => {
   }
 });
 
-inputTextArea.addEventListener("blur", async () => {
+form.addEventListener("change", async () => {
   await translation_workflow();
 });
 
