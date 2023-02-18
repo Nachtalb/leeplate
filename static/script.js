@@ -3,6 +3,8 @@ const inputTextArea = document.querySelector("#text");
 const outputTextArea = document.querySelector("#translation");
 const sourceLanguageSelect = document.querySelector("#source_language");
 
+let current_translation;
+
 function debounce(fn, delay) {
   let timerId;
   return async function (...args) {
@@ -23,20 +25,24 @@ async function translationWorkflow() {
   const formData = new FormData(form);
   if (formData.get("text") === "") return;
 
-  outputTextArea.disabled = true;
 
-  const data = {
+  const data = JSON.stringify({
     text: formData.get("text"),
     source_language: formData.get("source_language"),
     target_language: formData.get("target_language"),
-  };
+  });
+
+  if (current_translation === data) return;
+  current_translation = data;
+
+  outputTextArea.disabled = true;
 
   const response = await fetch("/translate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(data),
+    body: data,
   });
 
   const result = await response.json();
