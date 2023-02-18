@@ -5,6 +5,8 @@ const sourceLanguageSelect = document.querySelector("#source_language");
 
 async function translation_workflow() {
   const formData = new FormData(form);
+  if (formData.get("text") === "") return;
+
   const data = {
     text: formData.get("text"),
     source_language: formData.get("source_language"),
