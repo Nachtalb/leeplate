@@ -3,9 +3,7 @@ const inputTextArea = document.querySelector("#text");
 const outputTextArea = document.querySelector("#translation");
 const sourceLanguageSelect = document.querySelector("#source_language");
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
+async function translation_workflow() {
   const formData = new FormData(form);
   const data = {
     text: formData.get("text"),
@@ -52,4 +50,21 @@ form.addEventListener("submit", async (event) => {
     const audio = new Audio(audioUrl);
     audio.play();
   });
+}
+
+form.addEventListener("keydown", async (event) => {
+  if (event.ctrlKey && event.key === "Enter") {
+    event.preventDefault();
+    await translation_workflow();
+  }
+});
+
+inputTextArea.addEventListener("blur", async () => {
+  await translation_workflow();
+});
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  await translation_workflow();
 });
