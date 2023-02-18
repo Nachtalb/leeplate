@@ -17,7 +17,12 @@ translator = Translator()
 @app.get("/", response_class=HTMLResponse)
 async def translate(request: Request):
     return templates.TemplateResponse(
-        "translate.j2", {"request": request, "languages": {code: name.title() for code, name in LANGUAGES.items()}, "default_lang": "en"}
+        "translate.j2",
+        {
+            "request": request,
+            "languages": {code: name.title() for code, name in LANGUAGES.items()},
+            "default_lang": "en",
+        },
     )
 
 
