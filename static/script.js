@@ -3,7 +3,23 @@ const inputTextArea = document.querySelector("#text");
 const outputTextArea = document.querySelector("#translation");
 const sourceLanguageSelect = document.querySelector("#source_language");
 
-async function translation_workflow() {
+function debounce(fn, delay) {
+  let timerId;
+  return async function (...args) {
+    if (timerId) {
+      clearTimeout(timerId);
+    }
+    return new Promise((resolve) => {
+      timerId = setTimeout(async () => {
+        const result = await fn(...args);
+        timerId = null;
+        resolve(result);
+      }, delay);
+    });
+  };
+}
+
+async function translationWorkflow() {
   const formData = new FormData(form);
   if (formData.get("text") === "") return;
 
@@ -62,19 +78,18 @@ async function translation_workflow() {
   });
 }
 
-form.addEventListener("keydown", async (event) => {
-  if (event.ctrlKey && event.key === "Enter") {
-    event.preventDefault();
-    await translation_workflow();
-  }
+const translate = debounce(translationWorkflow, 500);
+
+form.addEventListener("keydown", async () => {
+  await translate()
 });
 
 form.addEventListener("change", async () => {
-  await translation_workflow();
+  await translate();
 });
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  await translation_workflow();
+  await translate();
 });
