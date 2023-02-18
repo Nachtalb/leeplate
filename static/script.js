@@ -111,6 +111,27 @@ outputAudioButton.addEventListener("click", async () => {
   if (!this.disabled) await playAudio(false)
 });
 
+
+async function copyContent(button) {
+  if (button.disabled) return;
+  try {
+    await navigator.clipboard.writeText(button.previousElementSibling.value);
+    // Show a tooltip to indicate that the text has been copied
+    button.setAttribute("data-bs-original-title", "Copied!");
+    const tooltip = new bootstrap.Tooltip(button, { placement: "top", trigger: "manual" });
+    tooltip.show();
+    // Hide the tooltip after a short delay
+    setTimeout(() => tooltip.hide(), 1000);
+  } catch (error) {
+    console.error("Failed to copy text:", error);
+  }
+}
+
+const copyInputButton = document.getElementById("copyInputButton");
+const copyOutputButton = document.getElementById("copyOutputButton");
+copyInputButton.addEventListener("click", async (event) => { await copyContent(event.currentTarget) });
+copyOutputButton.addEventListener("click", async (event) => { await copyContent(event.currentTarget) });
+
 async function translationWorkflow() {
   const formData = new FormData(form);
   if (formData.get("text") === "") return;
@@ -143,6 +164,8 @@ async function translationWorkflow() {
     sourceLanguageSelect.value = currentTranslationResult.src;
 
   outputTextArea.disabled = false;
+  copyInputButton.disabled = false;
+  copyOutputButton.disabled = false;
   inputAudioButton.disabled = !await canSpeakLanguage(currentTranslationResult["src"]);
   outputAudioButton.disabled = !await canSpeakLanguage(currentTranslationResult["dest"]);
 }

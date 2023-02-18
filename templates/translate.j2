@@ -6,8 +6,11 @@
       <form id="translate-form">
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group">
+            <div class="form-group position-relative">
               <textarea name="text" id="text" class="form-control" rows="10" placeholder="Input Text"></textarea>
+              <button class="btn btn-secondary position-absolute end-0 bottom-0 m-2" type="button" id="copyInputButton" disabled>
+                <i class="bi bi-clipboard2"></i>
+              </button>
             </div>
             <div class="form-group">
               <label for="source_language">Source Language</label>
@@ -25,8 +28,11 @@
             </div>
           </div>
           <div class="col-md-6">
-            <div class="form-group">
+            <div class="form-group position-relative">
               <textarea name="translation" id="translation" class="form-control" rows="10" placeholder="Output Text"></textarea>
+              <button class="btn btn-secondary position-absolute end-0 bottom-0 m-2" type="button" id="copyOutputButton" disabled>
+                <i class="bi bi-clipboard2"></i>
+              </button>
             </div>
             <div class="form-group">
               <label for="target_language">Target Language</label>
