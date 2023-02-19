@@ -4,6 +4,8 @@ const outputTextArea = document.querySelector("#translation");
 const sourceLanguageSelect = document.querySelector("#source_language");
 const outputAudioButton = document.querySelector("#output-audio-button");
 const inputAudioButton = document.querySelector("#input-audio-button");
+const outputAudioDownloadButton = document.querySelector("#output-audio-download-button");
+const inputAudioDownloadButton = document.querySelector("#input-audio-download-button");
 
 let currentTranslationInput;
 let currentTranslationResult;
@@ -25,25 +27,42 @@ function playCachedAudio(audioData) {
   });
 }
 
-async function playAudio(isSource) {
-  const text = currentTranslationResult[isSource ? "origin" : "text"]
-  const language = currentTranslationResult[isSource ? "src" : "dest"]
-  // Check if the audio data is already cached
-  if (audioCache[text]) {
-    playCachedAudio(audioCache[text]);
-    return;
-  }
+async function getAudio(text, language) {
+  if (!(language in audioCache)) audioCache[language] = {};
+  if (text in audioCache[language]) return audioCache[language][text];
 
-  // Make a request to the server to get the audio data
   const response = await fetch(`/speak?lang=${language}&text=${encodeURIComponent(text)}`);
   const audioData = await response.arrayBuffer();
 
   // Cache the audio data
-  audioCache[text] = audioData;
+  audioCache[language][text] = audioData;
 
-  // Play the audio data
-  playCachedAudio(audioData);
+  return audioCache[language][text]
 }
+
+async function playAudio(isSource) {
+  const text = currentTranslationResult[isSource ? "origin" : "text"]
+  const language = currentTranslationResult[isSource ? "src" : "dest"]
+  playCachedAudio(await getAudio(text, language));
+}
+
+async function downloadAudio(isSource) {
+  const text = currentTranslationResult[isSource ? "origin" : "text"]
+  const language = currentTranslationResult[isSource ? "src" : "dest"]
+  const audioData = await getAudio(text, language);
+  if (!audioData) {
+    console.error(`No audio found for "${text}" in language "${language}"`);
+    return;
+  }
+  const url = URL.createObjectURL(new Blob([audioData]));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `audio_${text.replace(/\s+/g, "_").toLowerCase().slice(0, 20)}.mp3`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 
 function debounce(fn, delay) {
   let timerId;
@@ -103,13 +122,10 @@ async function canSpeakLanguage(languageCode) {
   return languageCode in (await getSpokenLanguages());
 }
 
-inputAudioButton.addEventListener("click", async () => {
-  if (!this.disabled) await playAudio(true)
-});
-
-outputAudioButton.addEventListener("click", async () => {
-  if (!this.disabled) await playAudio(false)
-});
+inputAudioButton.addEventListener("click", async (event) => { if (!event.currentTarget.disabled) await playAudio(true) });
+outputAudioButton.addEventListener("click", async (event) => { if (!event.currentTarget.disabled) await playAudio(false) });
+inputAudioDownloadButton.addEventListener("click", async (event) => { if (!event.currentTarget.disabled) await downloadAudio(true) });
+outputAudioDownloadButton.addEventListener("click", async (event) => { if (!event.currentTarget.disabled) await downloadAudio(false) });
 
 
 async function copyContent(button) {
@@ -167,7 +183,9 @@ async function translationWorkflow() {
   copyInputButton.disabled = false;
   copyOutputButton.disabled = false;
   inputAudioButton.disabled = !await canSpeakLanguage(currentTranslationResult["src"]);
+  inputAudioDownloadButton.disabled = inputAudioButton.disabled
   outputAudioButton.disabled = !await canSpeakLanguage(currentTranslationResult["dest"]);
+  outputAudioDownloadButton.disabled = outputAudioButton.disabled
 }
 
 const translate = debounce(translationWorkflow, 500);
