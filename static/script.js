@@ -4,16 +4,27 @@ const outputTextArea = document.querySelector("#translation");
 const sourceLanguageSelect = document.querySelector("#source_language");
 const outputAudioButton = document.querySelector("#output-audio-button");
 const inputAudioButton = document.querySelector("#input-audio-button");
-const outputAudioDownloadButton = document.querySelector(
-  "#output-audio-download-button"
-);
-const inputAudioDownloadButton = document.querySelector(
-  "#input-audio-download-button"
-);
+const outputAudioDownloadButton = document.querySelector("#output-audio-download-button");
+const inputAudioDownloadButton = document.querySelector("#input-audio-download-button");
 
 let currentTranslationInput;
 let currentTranslationResult;
 let audioCache = {};
+
+// Get the browser language and extract the first two characters
+const browserLanguage = (navigator.language || navigator.userLanguage).toLowerCase().substring(0, 2);
+const targetLanguageSelect = document.getElementById("target_language");
+const fallbackLanguage = "en";
+
+// Determine the selected language
+const selectedLanguage =
+  targetLanguageSelect.querySelector(`option[value="${browserLanguage}"]`) ||
+  targetLanguageSelect.querySelector(`option[value="${fallbackLanguage}"]`);
+
+// Set the selected language
+if (selectedLanguage) {
+  selectedLanguage.selected = true;
+}
 
 function playCachedAudio(audioData) {
   const audioContext = new AudioContext();
@@ -35,9 +46,7 @@ async function getAudio(text, language) {
   if (!(language in audioCache)) audioCache[language] = {};
   if (text in audioCache[language]) return audioCache[language][text];
 
-  const response = await fetch(
-    `/speak?lang=${language}&text=${encodeURIComponent(text)}`
-  );
+  const response = await fetch(`/speak?lang=${language}&text=${encodeURIComponent(text)}`);
   const audioData = await response.arrayBuffer();
 
   // Cache the audio data
@@ -63,10 +72,7 @@ async function downloadAudio(isSource) {
   const url = URL.createObjectURL(new Blob([audioData]));
   const a = document.createElement("a");
   a.href = url;
-  a.download = `audio_${text
-    .replace(/\s+/g, "_")
-    .toLowerCase()
-    .slice(0, 20)}.mp3`;
+  a.download = `audio_${text.replace(/\s+/g, "_").toLowerCase().slice(0, 20)}.mp3`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -102,9 +108,7 @@ async function fetchSpokenLanguages() {
 function getSpokenLanguages() {
   return new Promise((resolve, reject) => {
     // Check if the spoken languages are already cached in localStorage
-    const cachedLanguages = JSON.parse(
-      localStorage.getItem(spokenLanguagesCacheKey)
-    );
+    const cachedLanguages = JSON.parse(localStorage.getItem(spokenLanguagesCacheKey));
     if (cachedLanguages && Date.now() < cachedLanguages.expiry) {
       // The spoken languages are cached and haven't expired yet, use them
       resolve(cachedLanguages.languages);
@@ -203,19 +207,14 @@ async function translationWorkflow() {
 
   currentTranslationResult = await response.json();
   outputTextArea.value = currentTranslationResult.text;
-  if (formData.get("source_language") == "auto")
-    sourceLanguageSelect.value = currentTranslationResult.src;
+  if (formData.get("source_language") == "auto") sourceLanguageSelect.value = currentTranslationResult.src;
 
   outputTextArea.disabled = false;
   copyInputButton.disabled = false;
   copyOutputButton.disabled = false;
-  inputAudioButton.disabled = !(await canSpeakLanguage(
-    currentTranslationResult["src"]
-  ));
+  inputAudioButton.disabled = !(await canSpeakLanguage(currentTranslationResult["src"]));
   inputAudioDownloadButton.disabled = inputAudioButton.disabled;
-  outputAudioButton.disabled = !(await canSpeakLanguage(
-    currentTranslationResult["dest"]
-  ));
+  outputAudioButton.disabled = !(await canSpeakLanguage(currentTranslationResult["dest"]));
   outputAudioDownloadButton.disabled = outputAudioButton.disabled;
 }
 
