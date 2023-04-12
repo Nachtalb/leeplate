@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+  license_api:
+    image: ghcr.io/nachtalb/leeplate:latest
+    container_name: leeplate
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
