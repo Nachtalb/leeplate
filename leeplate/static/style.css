@@ -1,1 +1,15 @@
+.dropdown-menu {
+  --bs-dropdown-padding-x: 0.25rem;
+  --bs-dropdown-padding-y: 0.25rem;
+  --bs-dropdown-font-size: 0.875rem;
+}
 
+.dropdown .bi {
+  width: 1em;
+  height: 1em;
+}
+
+svg path {
+  --bs-text-opacity: 1;
+  fill: rgba(var(--bs-body-color-rgb), var(--bs-text-opacity)) !important;
+}
