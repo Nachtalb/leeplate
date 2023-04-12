@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "leeplate"
 version = "0.1.0"
-description = "A privacy-oriented alternative frontend for translation providers"
+description = "A privacy-oriented alternative frontend for translation providers."
 authors = ["Nachtalb <na@nachtalb.io>"]
 license = "LGPL-3.0"
 readme = "README.md"
