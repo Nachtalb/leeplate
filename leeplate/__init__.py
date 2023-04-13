@@ -1,5 +1,7 @@
+__version__ = "0.1.0"
 import argparse
 import io
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -24,9 +26,11 @@ async def translate(request: Request):
     return templates.TemplateResponse(
         "translate.j2",
         {
+            "current_year": datetime.now().year,
             "request": request,
             "languages": {code: name.title() for code, name in LANGUAGES.items()},
             "default_lang": "en",
+            "version": __version__,
         },
     )
 
